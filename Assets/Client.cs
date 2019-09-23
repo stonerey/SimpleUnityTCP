@@ -110,7 +110,7 @@ public class Client : MonoBehaviour
     }
 
     //Close client connection
-    private void CloseClient()
+    public void CloseClient()
     {
         if (m_client.Connected)
         {
@@ -120,6 +120,8 @@ public class Client : MonoBehaviour
             //Set UI interactable properties        
             sendCloseButton.interactable = false;
         }
+        m_client = null;
+        ClientLog("Client Closed", Color.red);
     }
 
     //Custom Server Log

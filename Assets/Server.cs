@@ -128,14 +128,19 @@ public class Server : MonoBehaviour
         //Reset everything to defaults
         StopCoroutine(m_ClientComCoroutine);
         m_ClientComCoroutine = null;
-        m_client.Close();
-        m_client = null;
+
+        if(m_client != null)
+        {
+            m_client.Close();
+            m_client = null;
+        }
 
         //Set UI interactable properties
         closeServerButton.interactable = true;  //Enable button to let users close the server
 
         //Waiting to Accept a new Client
-        m_server.BeginAcceptTcpClient(ClientConnected, null);
+        if(m_server != null)
+            m_server.BeginAcceptTcpClient(ClientConnected, null);
     }    
 
     //Close client connection and disables the server
