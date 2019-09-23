@@ -31,6 +31,14 @@ public class CustomServer : Server
         m_CloseServerButton.onClick.AddListener(CloseServer);
 
         //Populate Server delegates
+        OnServerStarted = () =>
+        {
+            m_CloseServerButton.interactable = true;
+        };
+        OnServerClosed = () =>
+        {
+            m_CloseServerButton.interactable = false;
+        };
         OnClientConnected = () =>
         {
             m_SendToClientButton.interactable = true;

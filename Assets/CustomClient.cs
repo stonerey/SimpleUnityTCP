@@ -12,7 +12,7 @@ public class CustomClient : Client
     [SerializeField] private Button m_StartClientButton = null;
     [SerializeField] private Button m_SendToServerButton = null;
     [SerializeField] private InputField m_SendToServerInputField = null;
-    [SerializeField] private Button m_SendCloseButton = null;
+    [SerializeField] private Button m_CloseClientButton = null;
     [SerializeField] private Text m_ClientLogger = null;
 
     //Set UI interactable properties
@@ -26,14 +26,14 @@ public class CustomClient : Client
         m_SendToServerButton.onClick.AddListener(SendMessageToServer);
 
         //SendClose
-        m_SendCloseButton.interactable = false;
-        m_SendCloseButton.onClick.AddListener(SendCloseToServer);
+        m_CloseClientButton.interactable = false;
+        m_CloseClientButton.onClick.AddListener(base.CloseClient);
 
         //Populate Client delegates
         OnClientStarted = () =>
         {
             //Set UI interactable properties        
-            m_SendCloseButton.interactable = true;
+            m_CloseClientButton.interactable = true;
             m_SendToServerButton.interactable = true;
             m_StartClientButton.interactable = false;
         };
@@ -43,7 +43,7 @@ public class CustomClient : Client
             //Set UI interactable properties        
             m_StartClientButton.interactable = true;
             m_SendToServerButton.interactable = false;
-            m_SendCloseButton.interactable = false;
+            m_CloseClientButton.interactable = false;
         };
     }
 
@@ -51,14 +51,7 @@ public class CustomClient : Client
     {
         string newMsg = m_SendToServerInputField.text;
         base.SendMessageToServer(newMsg);
-    }
-
-    private void SendCloseToServer()
-    {
-        base.SendMessageToServer("Close");
-        //Set UI interactable properties        
-        m_SendCloseButton.interactable = false;
-    }
+    }    
 
     //Custom Client Log
     #region ClientLog

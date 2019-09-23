@@ -71,6 +71,8 @@ public class Client : MonoBehaviour
         //Stablish Client NetworkStream information
         m_NetStream = m_Client.GetStream();
 
+        print(m_NetStream);
+
         //Start Async Reading from Server and manage the response on MessageReceived function
         do
         {
@@ -137,7 +139,7 @@ public class Client : MonoBehaviour
 
     #region Close Client
     //Close client connection
-    private void CloseClient()
+    protected void CloseClient()
     {
         ClientLog("Client Closed", Color.red);
 
@@ -147,6 +149,18 @@ public class Client : MonoBehaviour
 
         if(m_Client != null)
             m_Client = null;
+
+        if(m_NetStream != null)
+        {
+            m_NetStream.Close();
+            m_NetStream = null;
+        }
+
+        if(m_ListenServerMsgsCoroutine!=null)
+        {
+            StopCoroutine(m_ListenServerMsgsCoroutine);
+            m_ListenServerMsgsCoroutine = null;
+        }
 
         OnClientClosed?.Invoke();
     }

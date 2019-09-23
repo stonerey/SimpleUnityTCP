@@ -69,14 +69,18 @@ public class Server : MonoBehaviour
     #region Communication Server<->Client
     //Coroutine waiting client messages while client is connected to the server
     private IEnumerator ListenClientMessages()
-    {        
+    {
+        if (m_Client == null)
+            yield break;
+
         //Restart values in case there are more than one client connections
         m_BytesReceived = 0;
         m_Buffer = new byte[49152];
 
         //Stablish Client NetworkStream information
         m_NetStream = m_Client.GetStream();
-
+        if (m_NetStream != null)
+            print("YOOOOOOOOOOOOOO ");
         //While there is a connection with the client, await for messages
         do
         {
@@ -153,8 +157,11 @@ public class Server : MonoBehaviour
         //Close client connection
         if (m_Client != null)
         {
-            m_NetStream.Close();
-            m_NetStream = null;
+            if(m_NetStream != null)
+            {
+                m_NetStream.Close();
+                m_NetStream = null;
+            }
             m_Client.Close();
             m_Client = null;
         }
