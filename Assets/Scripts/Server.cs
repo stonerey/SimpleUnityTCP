@@ -24,6 +24,7 @@ public class Server : MonoBehaviour
     private byte[] m_Buffer = new byte[49152];
     private int m_BytesReceived = 0;
     private string m_ReceivedMessage = "";
+    private string m_AcumulatedSendMessage = "";
     private IEnumerator m_ListenClientMsgsCoroutine = null;
     #endregion
 
@@ -80,10 +81,12 @@ public class Server : MonoBehaviour
         //Stablish Client NetworkStream information
         m_NetStream = m_Client.GetStream();
 
+        SendMessageToClient(m_AcumulatedSendMessage);
+
         //While there is a connection with the client, await for messages
         do
         {
-            ServerLog("Server is listening client msg...", Color.yellow);
+            //ServerLog("Server is listening client msg...", Color.yellow);
             //Start Async Reading from Client and manage the response on MessageReceived function
             m_NetStream.BeginRead(m_Buffer, 0, m_Buffer.Length, MessageReceived,  m_NetStream);
 
@@ -92,8 +95,7 @@ public class Server : MonoBehaviour
             {
                 OnMessageReceived(m_ReceivedMessage);
                 m_BytesReceived = 0;
-            }
-
+            }           
             yield return new WaitForSeconds(waitingMessagesFrequency);
 
         } while (m_BytesReceived >= 0 && m_NetStream != null);
@@ -103,24 +105,36 @@ public class Server : MonoBehaviour
     //What to do with the received message on server
     protected virtual void OnMessageReceived(string receivedMessage)
     {
+        receivedMessage = receivedMessage.GetResponseInfo();
         ServerLog("Msg recived on Server: " + "<b>" + receivedMessage + "</b>", Color.green);
         switch (receivedMessage)
         {
             case "Close":
                 //In this case we send "Close" to shut down client
-                SendMessageToClient("Close");
+                //SendMessageToClient("Close");
                 //Close client connection
                 CloseClientConnection();
                 break;
+            case "2":
+                m_AcumulatedSendMessage += "you 2";
+                break;
             default:
-                ServerLog("Received message " + receivedMessage + ", has no special behaviuor", Color.red);
+                //SendMessageToClient("ACK");
+                //ServerLog("Received message " + receivedMessage + ", has no special behaviuor", Color.red);
                 break;
         }
+        SendMessageToClient(m_AcumulatedSendMessage);
+    }
+
+    protected void PrepareMessage(string addMessage)
+    {
+        m_AcumulatedSendMessage = addMessage;
     }
 
     //Send custom string msg to client
     protected void SendMessageToClient(string sendMsg)
     {
+        sendMsg = "ACK|" + sendMsg;
         //early out if there is nothing connected       
         if (m_NetStream == null)
         {
@@ -133,6 +147,7 @@ public class Server : MonoBehaviour
         //Start Sync Writing
         m_NetStream.Write(msgOut, 0, msgOut.Length);
         ServerLog("Msg sended to Client: " + "<b>" + sendMsg + "</b>", Color.blue);
+        m_AcumulatedSendMessage = "";
     }
 
     //AsyncCallback called when "BeginRead" is ended, waiting the message response from client

@@ -57,7 +57,7 @@ public class CustomServer : Server
     private void SendMessageToClient()
     {
         string newMsg = m_SendToClientInputField.text;
-        base.SendMessageToClient(newMsg);
+        base.PrepareMessage(newMsg);
     }
 
     //Close connection with the client

@@ -22,15 +22,15 @@ public class Client : MonoBehaviour
     private byte[] m_Buffer = new byte[49152];
     private int m_BytesReceived = 0;
     private string m_ReceivedMessage = "";
+    private string m_AcumulatedSendMessage = "";
     private IEnumerator m_ListenServerMsgsCoroutine = null;
+    private float m_TimeOut = 0;
     #endregion
 
     #region Delegate Variables
     protected Action OnClientStarted = null;    //Delegate triggered when client start
     protected Action OnClientClosed = null;    //Delegate triggered when client close
     #endregion
-
-    private bool isMessageSended = false;
 
     //Start client and stablish connection with server
     protected void StartClient()
@@ -86,30 +86,46 @@ public class Client : MonoBehaviour
                 m_BytesReceived = 0;
             }
 
+            m_TimeOut += Time.deltaTime;
+            print(m_TimeOut);
+            //if(m_TimeOut > waitingMessagesFrequency*1.5f)
+
             yield return new WaitForSeconds(waitingMessagesFrequency);
 
         }while(m_BytesReceived >= 0 && m_NetStream != null);
         //The communication is over
     }
-
+    
     //What to do with the received message on client
     protected virtual void OnMessageReceived(string receivedMessage)
     {
+        receivedMessage = receivedMessage.GetResponseInfo();
         ClientLog("Msg recived on Client: " + "<b>" + receivedMessage + "</b>", Color.green);
-        switch (m_ReceivedMessage)
+        switch (receivedMessage)
         {
-            case "Close":                
+            case "Close":
                 CloseClient();
                 break;
+            case "3":
+                m_AcumulatedSendMessage += "ou";
+                break;
             default:
-                ClientLog("Received message " + receivedMessage + ", has no special behaviuor", Color.red);
+                //ClientLog("Received message " + receivedMessage + ", has no special behaviuor", Color.red);
                 break;
         }
+        m_TimeOut = 0;
+        SendMessageToServer(m_AcumulatedSendMessage);
+    }
+
+    protected void PrepareMessage(string addMessage)
+    {
+        m_AcumulatedSendMessage = addMessage;
     }
 
     //Send custom string msg to server
     protected void SendMessageToServer(string sendMsg)
     {
+        sendMsg = "ACK|" + sendMsg;
         //early out if there is nothing connected       
         if (!m_Client.Connected)
         {
@@ -121,7 +137,8 @@ public class Client : MonoBehaviour
         byte[] msg = Encoding.ASCII.GetBytes(sendMsg); //Encode message as bytes
         //Start Sync Writing
         m_NetStream.Write(msg, 0, msg.Length);
-        ClientLog("Msg sended to Server: " + "<b>"+sendMsg+"</b>", Color.blue);        
+        ClientLog("Msg sended to Server: " + "<b>"+sendMsg+"</b>", Color.blue);
+        m_AcumulatedSendMessage = "";
     }
 
     //AsyncCallback called when "BeginRead" is ended, waiting the message response from server

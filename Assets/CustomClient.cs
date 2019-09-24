@@ -50,7 +50,7 @@ public class CustomClient : Client
     private void SendMessageToServer()
     {
         string newMsg = m_SendToServerInputField.text;
-        base.SendMessageToServer(newMsg);
+        base.PrepareMessage(newMsg);
     }    
 
     //Custom Client Log
