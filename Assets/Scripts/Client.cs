@@ -30,6 +30,8 @@ public class Client : MonoBehaviour
     protected Action OnClientClosed = null;    //Delegate triggered when client close
     #endregion
 
+    private bool isMessageSended = false;
+
     //Start client and stablish connection with server
     protected void StartClient()
     {
@@ -71,8 +73,6 @@ public class Client : MonoBehaviour
         //Stablish Client NetworkStream information
         m_NetStream = m_Client.GetStream();
 
-        print(m_NetStream);
-
         //Start Async Reading from Server and manage the response on MessageReceived function
         do
         {
@@ -90,7 +90,6 @@ public class Client : MonoBehaviour
 
         }while(m_BytesReceived >= 0 && m_NetStream != null);
         //The communication is over
-        //CloseClient();
     }
 
     //What to do with the received message on client
@@ -99,7 +98,7 @@ public class Client : MonoBehaviour
         ClientLog("Msg recived on Client: " + "<b>" + receivedMessage + "</b>", Color.green);
         switch (m_ReceivedMessage)
         {
-            case "Close":
+            case "Close":                
                 CloseClient();
                 break;
             default:
@@ -122,7 +121,7 @@ public class Client : MonoBehaviour
         byte[] msg = Encoding.ASCII.GetBytes(sendMsg); //Encode message as bytes
         //Start Sync Writing
         m_NetStream.Write(msg, 0, msg.Length);
-        ClientLog("Msg sended to Server: " + "<b>"+sendMsg+"</b>", Color.blue);
+        ClientLog("Msg sended to Server: " + "<b>"+sendMsg+"</b>", Color.blue);        
     }
 
     //AsyncCallback called when "BeginRead" is ended, waiting the message response from server
@@ -156,7 +155,7 @@ public class Client : MonoBehaviour
             m_NetStream = null;
         }
 
-        if(m_ListenServerMsgsCoroutine!=null)
+        if(m_ListenServerMsgsCoroutine != null)
         {
             StopCoroutine(m_ListenServerMsgsCoroutine);
             m_ListenServerMsgsCoroutine = null;

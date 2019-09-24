@@ -79,8 +79,7 @@ public class Server : MonoBehaviour
 
         //Stablish Client NetworkStream information
         m_NetStream = m_Client.GetStream();
-        if (m_NetStream != null)
-            print("YOOOOOOOOOOOOOO ");
+
         //While there is a connection with the client, await for messages
         do
         {
@@ -97,9 +96,8 @@ public class Server : MonoBehaviour
 
             yield return new WaitForSeconds(waitingMessagesFrequency);
 
-        } while (m_BytesReceived >= 0 && m_NetStream != null);   
+        } while (m_BytesReceived >= 0 && m_NetStream != null);
         //The communication is over
-        //CloseClientConnection();
     }
 
     //What to do with the received message on server
@@ -154,6 +152,7 @@ public class Server : MonoBehaviour
     protected virtual void CloseServer()
     {
         ServerLog("Server Closed", Color.red);
+        CloseClientConnection();
         //Close client connection
         if (m_Client != null)
         {
@@ -180,12 +179,18 @@ public class Server : MonoBehaviour
     {
         ServerLog("Close Connection with Client", Color.red);
         //Reset everything to defaults
-        StopCoroutine(m_ListenClientMsgsCoroutine);
-        m_ListenClientMsgsCoroutine = null;
-        m_Client.Close();
-        m_Client = null;
 
-        //Waiting to Accept a new Client
+        if(m_ListenClientMsgsCoroutine != null)
+        {
+            StopCoroutine(m_ListenClientMsgsCoroutine);
+            m_ListenClientMsgsCoroutine = null;
+        }
+
+        if(m_Client != null)
+        {
+            m_Client.Close();
+            m_Client = null;
+        }
         m_Server.BeginAcceptTcpClient(ClientConnected, null);
     }
     #endregion
