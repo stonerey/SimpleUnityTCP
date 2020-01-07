@@ -19,11 +19,18 @@ public class Server : MonoBehaviour
 
     #region  Private m_Variables
     private TcpListener m_Server = null;
-    private TcpClient m_Client = null;
+    protected TcpClient m_Client = null;
     private NetworkStream m_NetStream = null;
     private byte[] m_Buffer = new byte[49152];
     private int m_BytesReceived = 0;
-    private string m_ReceivedMessage = "";
+    [SerializeField]private string m_ReceivedMessage = "";
+    public string ReceivedMessage
+    {
+        get { return m_ReceivedMessage; }
+        set { m_ReceivedMessage = value;
+            ServerLog("Msg recived on Server: " + "<b>" + m_ReceivedMessage + "</b>", Color.green);
+        }
+    }
     private IEnumerator m_ListenClientMsgsCoroutine = null;
     #endregion
 
@@ -35,10 +42,11 @@ public class Server : MonoBehaviour
 
     //Start server and wait for clients
     protected virtual void StartServer()
-    {        
+    {
         //Set and enable Server 
         IPAddress ip = IPAddress.Parse(ipAdress);
         m_Server = new TcpListener(ip, port);
+        m_Server.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);
         m_Server.Start();
         ServerLog("Server Started", Color.green);
         //Wait for async client connection 
@@ -87,7 +95,7 @@ public class Server : MonoBehaviour
             //If there is any msg, do something
             if (m_BytesReceived > 0)
             {
-                OnMessageReceived(m_ReceivedMessage);
+                OnMessageReceived(ReceivedMessage);
                 m_BytesReceived = 0;
             }
 
@@ -113,7 +121,7 @@ public class Server : MonoBehaviour
             default:
                 ServerLog("Received message " + receivedMessage + ", has no special behaviuor", Color.red);
                 break;
-        }
+        }        
     }
 
     //Send custom string msg to client
@@ -140,10 +148,10 @@ public class Server : MonoBehaviour
         {
             //build message received from client
             m_BytesReceived = m_NetStream.EndRead(result);                              //End async reading
-            m_ReceivedMessage = Encoding.ASCII.GetString(m_Buffer, 0, m_BytesReceived); //De-encode message as string
+            ReceivedMessage = Encoding.ASCII.GetString(m_Buffer, 0, m_BytesReceived); //De-encode message as string
         }
     }
-    #endregion    
+    #endregion
 
     #region Close Server/ClientConnection
     //Close client connection and disables the server
@@ -153,17 +161,21 @@ public class Server : MonoBehaviour
         //Close client connection
         if (m_Client != null)
         {
+            ServerLog("CLIENT DISCONECTION", Color.black);
             m_NetStream.Close();
             m_NetStream = null;
             m_Client.Close();
             m_Client = null;
         }
         //Close server connection
-        if (m_Server != null)
-        {
-            m_Server.Stop();
-            m_Server = null;
-        }
+        //if (m_Server != null)
+        //{
+        //    m_Server.Stop();
+        //    m_Server = null;
+        //}
+        StopCoroutine(m_ListenClientMsgsCoroutine);
+        //Waiting to Accept a new Client
+        m_Server.BeginAcceptTcpClient(ClientConnected, null);
 
         OnServerClosed?.Invoke();
     }
