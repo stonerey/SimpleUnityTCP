@@ -18,6 +18,7 @@ public class Server : MonoBehaviour
     #endregion
 
     #region  Private m_Variables
+    private bool isClientConnected = false;
     private TcpListener m_Server = null;
     private TcpClient m_Client = null;
     private NetworkStream m_NetStream = null;
@@ -35,7 +36,7 @@ public class Server : MonoBehaviour
 
     //Start server and wait for clients
     protected virtual void StartServer()
-    {        
+    {
         //Set and enable Server 
         IPAddress ip = IPAddress.Parse(ipAdress);
         m_Server = new TcpListener(ip, port);
@@ -52,7 +53,8 @@ public class Server : MonoBehaviour
         //If some client stablish connection
         if (m_Client != null && m_ListenClientMsgsCoroutine == null)
         {
-            //Start Listening Client Messages coroutine
+            isClientConnected = true;
+            //Start Listening Client Messages coroutine          
             m_ListenClientMsgsCoroutine = ListenClientMessages();
             StartCoroutine(m_ListenClientMsgsCoroutine);
         }
@@ -93,7 +95,7 @@ public class Server : MonoBehaviour
 
             yield return new WaitForSeconds(waitingMessagesFrequency);
 
-        } while (m_BytesReceived >= 0 && m_NetStream != null);   
+        } while (m_BytesReceived >= 0 && m_NetStream != null && isClientConnected);   
         //The communication is over
         //CloseClientConnection();
     }
@@ -108,7 +110,7 @@ public class Server : MonoBehaviour
                 //In this case we send "Close" to shut down client
                 SendMessageToClient("Close");
                 //Close client connection
-                CloseClientConnection();
+                //CloseClientConnection();
                 break;
             default:
                 ServerLog("Received message " + receivedMessage + ", has no special behaviuor", Color.red);
@@ -127,10 +129,17 @@ public class Server : MonoBehaviour
         }
 
         //Build message to client        
-        byte[] msgOut = Encoding.ASCII.GetBytes(sendMsg); //Encode message as bytes
-        //Start Sync Writing
-        m_NetStream.Write(msgOut, 0, msgOut.Length);
-        ServerLog("Msg sended to Client: " + "<b>" + sendMsg + "</b>", Color.blue);
+        if(m_NetStream.CanWrite)
+        {
+            byte[] msgOut = Encoding.ASCII.GetBytes(sendMsg); //Encode message as bytes
+            //Start Sync Writing
+            m_NetStream.Write(msgOut, 0, msgOut.Length);
+            ServerLog("Msg sended to Client: " + "<b>" + sendMsg + "</b>", Color.blue);
+        }
+        else
+        {
+            ServerLog("Sorry, you cannot write to this NetworkStream", Color.red);
+        }
     }
 
     //AsyncCallback called when "BeginRead" is ended, waiting the message response from client
@@ -177,7 +186,8 @@ public class Server : MonoBehaviour
         m_ListenClientMsgsCoroutine = null;
         m_Client.Close();
         m_Client = null;
-
+        isClientConnected = false;
+        //m_NetStream = null;
         //Waiting to Accept a new Client
         m_Server.BeginAcceptTcpClient(ClientConnected, null);
     }

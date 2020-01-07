@@ -17,6 +17,7 @@ public class Client : MonoBehaviour
     #endregion
 
     #region Private m_Variables
+    [SerializeField] private bool isReallyConnected = false;
     private TcpClient m_Client;
     private NetworkStream m_NetStream = null;
     private byte[] m_Buffer = new byte[49152];
@@ -47,6 +48,7 @@ public class Client : MonoBehaviour
             //Set and enable client
             m_Client.Connect(ipAddress, port);
             ClientLog("Client Started", Color.green);
+            isReallyConnected = true;
             OnClientStarted?.Invoke();
 
             //Start Listening Server Messages coroutine
@@ -65,7 +67,7 @@ public class Client : MonoBehaviour
     private IEnumerator ListenServerMessages()
     {
         //early out if there is nothing connected       
-        if (!m_Client.Connected)        
+        if (!m_Client.Connected || !isReallyConnected)        
             yield break;                
 
         //Stablish Client NetworkStream information
@@ -86,7 +88,7 @@ public class Client : MonoBehaviour
 
             yield return new WaitForSeconds(waitingMessagesFrequency);
 
-        }while(m_BytesReceived >= 0 && m_NetStream != null);
+        }while(m_BytesReceived >= 0 && m_NetStream != null && isReallyConnected);
         //The communication is over
         //CloseClient();
     }
@@ -142,12 +144,14 @@ public class Client : MonoBehaviour
         ClientLog("Client Closed", Color.red);
 
         //Reset everything to defaults        
-        if (m_Client.Connected)        
+        if (m_Client.Connected)
             m_Client.Close();
 
         if(m_Client != null)
             m_Client = null;
 
+        isReallyConnected = false;
+        StopCoroutine(ListenServerMessages());
         OnClientClosed?.Invoke();
     }
     #endregion
