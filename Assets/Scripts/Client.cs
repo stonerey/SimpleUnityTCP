@@ -17,8 +17,8 @@ public class Client : MonoBehaviour
     #endregion
 
     #region Private m_Variables
-    protected TcpClient m_Client;
-    protected NetworkStream m_NetStream = null;
+    private TcpClient m_Client;
+    private NetworkStream m_NetStream = null;
     private byte[] m_Buffer = new byte[49152];
     private int m_BytesReceived = 0;
     private string m_ReceivedMessage = "";
@@ -48,10 +48,6 @@ public class Client : MonoBehaviour
             m_Client.Connect(ipAddress, port);
             ClientLog("Client Started", Color.green);
             OnClientStarted?.Invoke();
-
-            //Start Listening Server Messages coroutine
-            //m_ListenServerMsgsCoroutine = ListenServerMessages();
-            //StartCoroutine(m_ListenServerMsgsCoroutine);
         }
         catch (SocketException)
         {
@@ -87,8 +83,7 @@ public class Client : MonoBehaviour
             yield return new WaitForSeconds(waitingMessagesFrequency);
 
         }while(m_BytesReceived >= 0 && m_NetStream != null);
-        //The communication is over
-        //CloseClient();
+        //The communication is over        
     }
 
     //What to do with the received message on client
@@ -138,7 +133,7 @@ public class Client : MonoBehaviour
 
     #region Close Client
     //Close client connection
-    protected void CloseClient()
+    private void CloseClient()
     {
         ClientLog("Client Closed", Color.red);
 

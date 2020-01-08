@@ -23,12 +23,13 @@ public class Server : MonoBehaviour
     private NetworkStream m_NetStream = null;
     private byte[] m_Buffer = new byte[49152];
     private int m_BytesReceived = 0;
+    //ToDo: Check if I can do the same without this property
     [SerializeField]private string m_ReceivedMessage = "";
-    public string ReceivedMessage
+    protected string ReceivedMessage
     {
         get { return m_ReceivedMessage; }
         set { m_ReceivedMessage = value;
-            ServerLog("Msg recived on Server: " + "<b>" + m_ReceivedMessage + "</b>", Color.green);
+            OnRecivedMessageChange();            
         }
     }
     private IEnumerator m_ListenClientMsgsCoroutine = null;
@@ -38,7 +39,10 @@ public class Server : MonoBehaviour
     protected Action OnServerStarted = null;    //Delegate triggered when server start
     protected Action OnServerClosed = null;     //Delegate triggered when server close
     protected Action OnClientConnected = null;  //Delegate triggered when the server stablish connection with client
+    //protected Action OnRecivedMessageChange = null;  //Delegate triggered when the ReceivedMessage is re-setted (OnMessageReceived could miss HTTPMessages);
     #endregion
+
+    protected virtual void OnRecivedMessageChange() { }
 
     //Start server and wait for clients
     protected virtual void StartServer()
@@ -95,7 +99,7 @@ public class Server : MonoBehaviour
             //If there is any msg, do something
             if (m_BytesReceived > 0)
             {
-                OnMessageReceived(ReceivedMessage);
+                OnMessageReceived(m_ReceivedMessage);
                 m_BytesReceived = 0;
             }
 
@@ -121,7 +125,7 @@ public class Server : MonoBehaviour
             default:
                 ServerLog("Received message " + receivedMessage + ", has no special behaviuor", Color.red);
                 break;
-        }        
+        }
     }
 
     //Send custom string msg to client
@@ -168,11 +172,11 @@ public class Server : MonoBehaviour
             m_Client = null;
         }
         //Close server connection
-        //if (m_Server != null)
-        //{
-        //    m_Server.Stop();
-        //    m_Server = null;
-        //}
+        if (m_Server != null)
+        {
+            m_Server.Stop();
+            m_Server = null;
+        }
         StopCoroutine(m_ListenClientMsgsCoroutine);
         //Waiting to Accept a new Client
         m_Server.BeginAcceptTcpClient(ClientConnected, null);
@@ -196,6 +200,7 @@ public class Server : MonoBehaviour
     #endregion
    
     #region ServerLog
+    //ToDo: WARNING WHEN RECEIVED MESSAGE USE ONE SERVER LOG, STOPS THE EXECUTION
     //Custom Server Log - With Text Color
     protected virtual void ServerLog(string msg, Color color)
     {
