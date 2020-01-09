@@ -7,7 +7,7 @@ using UnityEngine;
 /// Remember to use this. to use extensions on monobehaviour scripts
 /// </summary>
 public static class SimpleExtensions
-{
+{    
     //Invoke
     public static void Invoke(this MonoBehaviour mono, Action action, float delay)
     {

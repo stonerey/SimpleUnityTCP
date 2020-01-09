@@ -14,6 +14,8 @@ public class CustomClient : Client
     [SerializeField] private InputField m_SendToServerInputField = null;
     [SerializeField] private Button m_SendCloseButton = null;
     [SerializeField] private Text m_ClientLogger = null;
+    [Header("Send JSON")]
+    [SerializeField] private TextAsset jsonFileToSend = null;
 
     //Set UI interactable properties
     private void Awake()
@@ -49,7 +51,12 @@ public class CustomClient : Client
 
     private void SendMessageToServer()
     {
-        string newMsg = m_SendToServerInputField.text;
+        string newMsg = "";
+
+        if (jsonFileToSend == null)
+            newMsg = m_SendToServerInputField.text;
+        else
+            newMsg = jsonFileToSend.text;
         base.SendMessageToServer(newMsg);
     }
 

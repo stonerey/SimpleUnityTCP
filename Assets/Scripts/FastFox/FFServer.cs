@@ -1,4 +1,5 @@
 ﻿using System;
+using static OrderModel;
 
 public class FFServer : CustomServer
 {
@@ -15,11 +16,24 @@ public class FFServer : CustomServer
     #endregion
 
     private object obj = null;
-
+    //public OrderModel orderModel = null;
     private void Start()
     {
         OnEllipseJson = () => { print("EllipseStuff"); };
-        OnOrderJson = () => { print("OrderStuff"); };
+        OnOrderJson = () => 
+        {
+            OrderModel orderModel = new OrderModel((OrderModel)obj);
+            
+            switch(orderModel.orderType)
+            {
+                case OrderType.Play:
+                    print("Play Stuff");
+                    break;
+                case OrderType.End:
+                    print("End Stuff");
+                    break;
+            }
+        };
     }
 
     //ToDo: Check if I can do the same with HTTP 1.1 packages without property just with OnMessageReceived
